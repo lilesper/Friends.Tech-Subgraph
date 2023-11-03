@@ -1,8 +1,8 @@
-import {Trade as TradeEvent} from "../generated/FriendtechSharesV1/FriendtechSharesV1";
-import {Trade, ProtocolDaily, Protocol} from "../generated/schema";
-import {PROTOCOL, BIGINT_ONE, BIGINT_ZERO} from "./constants";
-import {GetOrCreateAccount, GetOrCreateHolding, GetOrCreateProtocol} from "./helpers";
-import {BigInt, ethereum} from "@graphprotocol/graph-ts";
+import { Trade as TradeEvent } from "../generated/FriendtechSharesV1/FriendtechSharesV1";
+import { Trade, ProtocolDaily, Protocol } from "../generated/schema";
+import { PROTOCOL, BIGINT_ONE, BIGINT_ZERO } from "./constants";
+import { GetOrCreateAccount, GetOrCreateAccountDaily, GetOrCreateHolding, GetOrCreateProtocol, getPrice } from "./helpers";
+import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 
 export function handleTrade(event: TradeEvent): void {
   let trader = GetOrCreateAccount(event.params.trader);
@@ -81,6 +81,7 @@ export function handleTrade(event: TradeEvent): void {
 
   // TIMESERIES UPDATES
   const day = event.block.timestamp.div(BigInt.fromI32(86400));
+  let accountDaily = GetOrCreateAccountDaily(subject, day);
 
   // Collection Address - Day
   let protocolDailyId = PROTOCOL.toHexString() + "-" + day.toString();
@@ -93,12 +94,22 @@ export function handleTrade(event: TradeEvent): void {
     dailyEntity.day = day;
     dailyEntity.dayProtocolRevenue = BIGINT_ZERO;
     dailyEntity.dayTrades = BIGINT_ZERO;
+    dailyEntity.dayBuyVolume = BIGINT_ZERO;
+    dailyEntity.daySellVolume = BIGINT_ZERO;
     dailyEntity.totalTradeVolume = BIGINT_ZERO;
     dailyEntity.dayTradeVolume = BIGINT_ZERO;
     dailyEntity.totalAccountRevenue = BIGINT_ZERO;
     dailyEntity.dayAccountRevenue = BIGINT_ZERO;
   }
 
+  accountDaily.timestamp = event.block.timestamp;
+  if (trade.isBuy) {
+    accountDaily.dayBuyVolume = accountDaily.dayBuyVolume.plus(trade.ethAmount)
+    accountDaily.dayPriceChange = getPrice(subject.keySupply.plus(trade.shareAmount), BIGINT_ONE).minus(getPrice(subject.keySupply, BIGINT_ONE))
+  } else {
+    accountDaily.daySellVolume = accountDaily.daySellVolume.plus(trade.ethAmount)
+    accountDaily.dayPriceChange = getPrice(subject.keySupply, BIGINT_ONE).minus(getPrice(subject.keySupply.minus(trade.shareAmount), BIGINT_ONE))
+  }
   //Add incrementors
   dailyEntity.timestamp = event.block.timestamp;
   dailyEntity.userCount = protocol.userCount;
@@ -114,6 +125,12 @@ export function handleTrade(event: TradeEvent): void {
     .plus(trade.protocolEthAmount)
     .plus(trade.subjectEthAmount);
   dailyEntity.dayTrades = dailyEntity.dayTrades.plus(BIGINT_ONE);
+  if (trade.isBuy) {
+    dailyEntity.dayBuyVolume = dailyEntity.dayBuyVolume.plus(trade.ethAmount);
+  } else {
+    dailyEntity.daySellVolume = dailyEntity.daySellVolume.plus(trade.ethAmount);
+  }
 
   dailyEntity.save();
+  accountDaily.save();
 }

@@ -54,6 +54,11 @@ type Account @entity {
 
   " trades of this account made by holders "
   tradesOf: [Trade!]! @derivedFrom(field: "subject")
+
+  " dailies "
+  accountDailies: [AccountDaily!]! @derivedFrom(field: "account")
+
+
 }
 
 " Relationship between 2 accounts "
@@ -74,6 +79,28 @@ type Holding @entity {
 }
 
 # Time series
+
+type AccountDaily @entity {
+  " Combination of Account ID + Day as bytes"
+  id: ID!
+
+  " Account associated with this daily metrics"
+  account: Account!
+
+  " Timestamp of the block / 86,400 (representing the day) "
+  day: BigInt!
+
+  " timestamp for when this was most recently updated "
+  timestamp: BigInt!
+
+  " Trade count for the account for the day "
+  daySellVolume: BigInt!
+  " Trade count for the account for the day "
+  dayBuyVolume: BigInt!
+
+  "Total Price Change "
+  dayPriceChange: BigInt!
+}
 
 " time series for the day "
 type ProtocolDaily @entity {
@@ -115,6 +142,12 @@ type ProtocolDaily @entity {
 
   " Total trades for the day "
   dayTrades: BigInt!
+
+  " Total Buy volume for the day "
+  dayBuyVolume: BigInt!
+
+  " Total Sell volume for the day "
+  daySellVolume: BigInt!
 }
 
 # EVENT Entities #
