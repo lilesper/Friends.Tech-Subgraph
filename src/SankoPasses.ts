@@ -1,4 +1,4 @@
-import { Trade as TradeEvent } from "../generated/FriendtechSharesV1/FriendtechSharesV1";
+import { Trade as TradeEvent } from "../generated/SankoPasses/SankoPasses";
 import { Trade, ProtocolDaily, Protocol } from "../generated/schema";
 import { PROTOCOL, BIGINT_ONE, BIGINT_ZERO } from "./constants";
 import { GetOrCreateAccount, GetOrCreateAccountDaily, GetOrCreateHolding, GetOrCreateProtocol, getPrice } from "./helpers";
@@ -6,7 +6,7 @@ import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 
 export function handleTrade(event: TradeEvent): void {
   let trader = GetOrCreateAccount(event.params.trader);
-  let subject = GetOrCreateAccount(event.params.subject);
+  let subject = GetOrCreateAccount(event.params.streamer);
   let holding = GetOrCreateHolding(trader, subject);
   let protocol = GetOrCreateProtocol();
 
@@ -18,32 +18,32 @@ export function handleTrade(event: TradeEvent): void {
   // Increment Counters on purchase
   if (event.params.isBuy) {
     // Update the holders Count if the new holder had 0 shares previously
-    if (holdingKeysOwned == BIGINT_ZERO && event.params.shareAmount.gt(BIGINT_ZERO)) {
+    if (holdingKeysOwned == BIGINT_ZERO && event.params.passAmount.gt(BIGINT_ZERO)) {
       subject.holdersCount = subjectHoldersCount.plus(BIGINT_ONE);
     }
 
-    holding.keysOwned = holdingKeysOwned.plus(event.params.shareAmount);
-    subject.keySupply = subjectKeyupply.plus(event.params.shareAmount);
+    holding.keysOwned = holdingKeysOwned.plus(event.params.passAmount);
+    subject.keySupply = subjectKeyupply.plus(event.params.passAmount);
   }
   // Decrement Counters on sale
   else {
     // If this is the last share the person owns, decrement the holders count for the subject
-    if (holdingKeysOwned.minus(event.params.shareAmount) == BIGINT_ZERO) {
+    if (holdingKeysOwned.minus(event.params.passAmount) == BIGINT_ZERO) {
       subject.holdersCount = subjectHoldersCount.minus(BIGINT_ONE);
     }
 
-    holding.keysOwned = holdingKeysOwned.minus(event.params.shareAmount);
-    subject.keySupply = subjectKeyupply.minus(event.params.shareAmount);
+    holding.keysOwned = holdingKeysOwned.minus(event.params.passAmount);
+    subject.keySupply = subjectKeyupply.minus(event.params.passAmount);
   }
 
   // Update the revenue metric for the subject and protocol
-  subject.accountRevenue = subject.accountRevenue.plus(event.params.subjectEthAmount);
+  subject.accountRevenue = subject.accountRevenue.plus(event.params.streamerEthAmount);
   protocol.protocolRevenue = protocol.protocolRevenue.plus(event.params.protocolEthAmount);
-  protocol.accountRevenue = protocol.accountRevenue.plus(event.params.subjectEthAmount);
+  protocol.accountRevenue = protocol.accountRevenue.plus(event.params.streamerEthAmount);
   protocol.tradeVolume = protocol.tradeVolume
     .plus(event.params.ethAmount)
     .plus(event.params.protocolEthAmount)
-    .plus(event.params.subjectEthAmount);
+    .plus(event.params.streamerEthAmount);
   protocol.totalTrades = protocol.totalTrades.plus(BIGINT_ONE);
 
   // update timestamp
@@ -59,11 +59,13 @@ export function handleTrade(event: TradeEvent): void {
   let trade = new Trade(event.transaction.hash.concatI32(event.logIndex.toI32()));
   trade.trader = trader.id;
   trade.subject = subject.id;
+  trade.referrer = event.params.referrer
+  trade.referralEthAmount = event.params.referralEthAmount
   trade.isBuy = event.params.isBuy;
-  trade.shareAmount = event.params.shareAmount;
+  trade.passAmount = event.params.passAmount;
   trade.ethAmount = event.params.ethAmount;
   trade.protocolEthAmount = event.params.protocolEthAmount;
-  trade.subjectEthAmount = event.params.subjectEthAmount;
+  trade.subjectEthAmount = event.params.streamerEthAmount;
   trade.supply = event.params.supply;
 
   trade.blockNumber = event.block.number;
@@ -105,10 +107,10 @@ export function handleTrade(event: TradeEvent): void {
   accountDaily.timestamp = event.block.timestamp;
   if (trade.isBuy) {
     accountDaily.dayBuyVolume = accountDaily.dayBuyVolume.plus(trade.ethAmount)
-    accountDaily.dayPriceChange = getPrice(subject.keySupply.plus(trade.shareAmount), BIGINT_ONE).minus(getPrice(subject.keySupply, BIGINT_ONE))
+    accountDaily.dayPriceChange = getPrice(subject.keySupply.plus(trade.passAmount), BIGINT_ONE).minus(getPrice(subject.keySupply, BIGINT_ONE))
   } else {
     accountDaily.daySellVolume = accountDaily.daySellVolume.plus(trade.ethAmount)
-    accountDaily.dayPriceChange = getPrice(subject.keySupply, BIGINT_ONE).minus(getPrice(subject.keySupply.minus(trade.shareAmount), BIGINT_ONE))
+    accountDaily.dayPriceChange = getPrice(subject.keySupply, BIGINT_ONE).minus(getPrice(subject.keySupply.minus(trade.passAmount), BIGINT_ONE))
   }
   //Add incrementors
   dailyEntity.timestamp = event.block.timestamp;

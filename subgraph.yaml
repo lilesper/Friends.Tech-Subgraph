@@ -6,9 +6,9 @@ dataSources:
     name: SankoPasses
     network: arbitrum-one
     source:
-      address: "0xCF205808Ed36593aa40a44F10c7f7C2F67d4A4d4"
+      address: "0x06f1afa00990a69ca03f82d4c1a3a64a45f45fcb"
       abi: SankoPasses
-      startBlock: 2430440
+      startBlock: 145796282 
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

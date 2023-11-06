@@ -154,12 +154,14 @@ type ProtocolDaily @entity {
 type Trade @entity(immutable: true) {
   id: Bytes!
   trader: Account! # address
-  subject: Account! # address
+  subject: Account! # address (corresponds to streamer in the ABI)
+  referrer: Account # address (new field from the ABI)
   isBuy: Boolean! # bool
-  shareAmount: BigInt! # uint256
+  passAmount: BigInt! # uint256
   ethAmount: BigInt! # uint256
   protocolEthAmount: BigInt! # uint256
-  subjectEthAmount: BigInt! # uint256
+  subjectEthAmount: BigInt! # uint256 (corresponds to streamerEthAmount in the ABI)
+  referralEthAmount: BigInt # uint256 (new field from the ABI)
   supply: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
