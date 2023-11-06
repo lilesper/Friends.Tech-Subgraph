@@ -1,3 +1,3 @@
 # sanko.tv Analytics
 
-Indexing metrics for [friend.tech](https://www.sanko.tv/)
+Indexing metrics for [sanko.tv](https://www.sanko.tv/)
