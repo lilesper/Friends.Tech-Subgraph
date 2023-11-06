@@ -17,6 +17,7 @@ export function handleMint(event: MintEvent): void {
     tip.protocolFee = event.params.protocolFee;
     tip.streamer = event.params.streamer;
     tip.totalPrice = event.params.totalPrice;
+    tip.blockTimestamp = event.block.timestamp;
     tip.save()
     gifter.save()
     streamer.save()

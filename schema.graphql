@@ -178,5 +178,5 @@ type Tip @entity(immutable: true) {
   amount:BigInt!
   totalPrice: BigInt!
   protocolFee:BigInt!
-
+  blockTimestamp: BigInt!
 }
