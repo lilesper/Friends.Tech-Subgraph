@@ -22,3 +22,23 @@ dataSources:
         - event: Trade(indexed address,indexed address,indexed address,bool,uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleTrade
       file: ./src/SankoPasses.ts
+  - kind: ethereum/contract
+    name: SankoTVGifts
+    network: arbitrum-one
+    source:
+      address: "0x35736cC5FAE425cE8d185Df42C567E6ECf563814"
+      abi: SankoTips
+      startBlock: 145796462 
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Minted
+      abis:
+        - name: SankoTips
+          file: ./abis/SankoTips.json
+      eventHandlers:
+        - event:  Minted(indexed address,indexed address,indexed uint256,uint256,uint256,uint256)
+          handler: handleMint
+      file: ./src/SankoGifts.ts

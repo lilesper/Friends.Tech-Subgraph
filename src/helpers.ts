@@ -57,6 +57,7 @@ export function GetOrCreateAccount(address: Address): Account {
     account.tradesCount = BIGINT_ZERO;
     account.keySupply = BIGINT_ZERO;
     account.accountRevenue = BIGINT_ZERO;
+    account.accountGifts = BIGINT_ZERO;
     account.save();
     protocol.save();
 

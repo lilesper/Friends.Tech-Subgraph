@@ -49,6 +49,9 @@ type Account @entity {
   " Fees earned by the account for holders trading shares "
   accountRevenue: BigInt!
 
+  " Gifts given "
+  accountGifts: BigInt!
+
   " trades made by this account "
   trades: [Trade!]! @derivedFrom(field: "trader")
 
@@ -166,4 +169,14 @@ type Trade @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+}
+type Tip @entity(immutable: true) {
+  id: Bytes!
+  gifter: Bytes! # address
+  streamer: Bytes! # address 
+  giftId: BigInt!
+  amount:BigInt!
+  totalPrice: BigInt!
+  protocolFee:BigInt!
+
 }
